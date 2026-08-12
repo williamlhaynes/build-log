@@ -2,6 +2,30 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-08-12 — Real market data in, checkout wired, nobody has paid yet
+
+**What shipped**
+- FlippaDrive's underwriting engine now runs on live market data. The mock provider is demoted to an explicit fallback behind a provider module: VIN decode + active-listing comps from MarketCheck, a 7-day valuation cache keyed per VIN, a $200/month budget gate that degrades to demo mode instead of overspending, and a per-endpoint cost ledger where every call — including cache hits at $0 and failed attempts — writes a row.
+- The full Stripe stack, live in a dedicated FlippaDrive account: 4 products, 4 prices (every one with a `lookup_key` and `tax_behavior: exclusive`, per the recipe extracted from SudsOps), 2 subscription payment links, real price IDs wired into checkout with a server-side allowlist, secret key rotated to the new account, customer portal configured. Enterprise came off self-serve entirely — it now says "Contact for pricing" because that tier should be a conversation.
+- Trust pages that match the trust pitch: About rewritten to say plainly it's a solo founder with a risk-management background, an essential-cookies-only cookie policy, and a consent banner with two equal buttons — Essential Only and Enable Analytics. Analytics is gated on that flag in the tracking code itself: no consent, no identifiers, no localStorage writes.
+- Vendor selection with receipts: VinAudit quoted $500/month for 3,000 queries; MarketCheck's published fees put a full underwrite at $0.0035. Took the free MarketCheck tier for production, requested VinAudit's 100-call trial for an accuracy bake-off, and got their caching terms in writing — persisted report data may be re-shown to the customer who bought it.
+
+**Numbers (real ones only)**
+- $0.0035 of market data per fresh underwrite ($0.0015 decode + $0.002 comps search); a cache hit costs $0.000
+- The placeholder ledger rates were 14x too high ($0.05/underwrite) until checked against the published fee schedule
+- 42 active comps on the first working live underwrite (2020 Ford Fusion S, exact-trim match, no widening needed)
+- 500 API calls/month on MarketCheck's free tier ≈ 250 fresh underwrites before the cache does the stretching
+- 4 Stripe products, 4 prices, 2 payment links, 0 test purchases so far
+- 15.7 Lovable credits across 8 agent runs, 240 founder-minutes, 3 work blocks over 6 days
+- $0 revenue — the checkout is live and no one has been through it
+
+**What broke**
+- The first production underwrite came back wearing the demo banner. The comps search queried active listings by exact VIN — which matches at most the one physical car being underwritten — so the 3-comp minimum tripped and every real VIN on earth would have fallen back to sample data. Fix: comps come from the decoded year/make/model/trim, widening to ±1 year when a trim is thin, with confidence downgraded whenever widening was needed.
+- Same failure exposed a ledger hole: when the provider threw, the billable HTTP calls it had already made were discarded with the error. Two real API calls happened, zero rows written, spend showed $0.00. Failed attempts now log their calls and cost before the fallback runs.
+- The SKU catalog workbook could not be written in place — Excel's lock rides through the OneDrive mount — so the corrected file lives under an `-UPDATED` name waiting for a manual rename. Third session this workbook has fought back.
+- The Linear connector invalidated itself in the middle of session close-out, and a Lovable build timed out at the 180-second MCP limit while the build itself finished fine — both look like failures, neither was, both cost a verification round-trip.
+- The COO review verdict on the session: Revise. Correct call — a billing stack with zero completed purchases is wiring, and it stays "wiring" until one real payment clears end to end.
+
 ## 2026-08-08 — Outlook was reading my auth emails and spending the tokens
 
 **What shipped**
