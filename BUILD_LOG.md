@@ -2,6 +2,33 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-08-26 — Opened the OSS door, then spent an hour on a picture
+
+**What shipped**
+- `mobile-security-guru/hyperagent` is public: MIT license, README with a Deploy to Cloudflare button, security policy, Contributor Covenant, topics, Discussions and Issues on, Projects and Wiki off. It is the fork-and-deploy door for the mobile trust-boundary agent, and it is marked pre-release in the README because the agent core has not landed yet. Saying that out loud beats a visitor discovering it.
+- A social card built as HTML/CSS and rasterized headlessly, so the artwork is version-controlled next to the thing it advertises and one command regenerates it. Brand palette lives as CSS variables, which makes compliance checkable instead of eyeballed. The panel shows output shape only (a score and an emitted artifact) with no scoring internals on a public image.
+- GitHub Sponsors profile completed and submitted for review: bio, introduction, funding goal, featured work, five published monthly tiers, custom-amount floor set to the lowest tier so nobody lands below the ladder and gets assigned nothing.
+- Ticket hygiene alongside it: one issue rewritten as the single source-of-truth table for tier pricing, two stale issues closed, and a superseded tier-naming scheme killed before anything downstream read it.
+
+**Numbers (real ones only)**
+- 3 commits, 7 files, 1 public repo
+- 5 sponsor tiers published, 1 funding goal live at 0 of 50
+- Card renders at 1280x640, 69,923 bytes truecolor; the broken palettized version that kept getting uploaded was 26,016
+- At least 4 failed upload attempts before the cause was found
+- 60 founder-minutes, 135 minutes wall clock across two days
+- 0 sponsors, $0 revenue. The application is still with GitHub staff and the Sponsor button is not live
+
+**What broke**
+- The social preview image never uploaded. Two independent causes stacked: I had palettized the PNG to shrink it, which some uploaders quietly reject, and every retry after the fix picked a stale copy of the old file sitting at the same filename in a different folder. Four rounds of "still blank" before anyone checked the pixel format of the file actually being selected.
+- GitHub's uploader writes the og:image meta tag whether or not the bytes land. I read that tag, saw a custom-image URL, and told William it had worked. Opening the URL returned 404. A meta tag is not a stored file, and I should have opened it before saying so.
+- I told him to check the per-tier sponsor limit field. There is no per-tier sponsor limit field. He went looking for it and asked whether he needed to delete and rebuild the tier. The ten-seat cap is now a promise enforced by hand, which is fine, but he spent time hunting a control that does not exist.
+- The GitHub connector could read everything and write nothing: 403 on the org's `.github` repo, and repo creation refused outright. The org install was missing. Everything moved once he ran it himself with his own credentials.
+- I handed a Windows user a bash script, then a command using `&&` in a shell version that does not support it. Both failed before doing anything.
+- Two tiers went live with byte-identical descriptions after a paste landed in the wrong box, and a third carried a fragment of the previous tier's text welded onto its last bullet.
+- The zip download flattened every folder, so the assets and dotfiles had to be rebuilt by hand on the far side.
+- Two attempts to render the card at 2x both broke its layout, so it was abandoned rather than shipped worse.
+- The through-line: an image that gates nothing consumed roughly half the founder's active time, while the thing that actually gates money (the Sponsors application) was submitted in minutes. That produced a standing rule to lead with the lowest-friction path and put a ceiling on cosmetic work before starting it, not after.
+
 ## 2026-08-12 — Real market data in, checkout wired, nobody has paid yet
 
 **What shipped**
