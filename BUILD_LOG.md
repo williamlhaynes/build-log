@@ -2,6 +2,31 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-09-06 — The alert pipe was never connected
+
+**What shipped**
+- sow.buildinhouse.com is a gated statement of work on a Cloudflare Worker: public summary at the root, an email-and-code gate on `/full`. Every gate event (page view, code sent, code failed, access granted, document served, access requested by a non-allowlisted address) is supposed to POST to an n8n workflow that emails William for the ones worth reading. As of this morning, none of them had ever arrived. The Worker's webhook URL was a commented-out line in `wrangler.toml`, so the logging function returned before sending anything. Fixed: the production webhook URL is now a bound variable, and the deploy output lists it.
+- One shared-secret header on both sides. The Worker sent the secret under one header name, the n8n credential was named for a different one, and the credential itself was attached to an unrelated W-9 request webhook rather than the gate webhook. The n8n workflow also had an IF node checking for a Bearer token the Worker never sends, which would have silently dropped every call that did get through. Now: same header name on both ends, Header Auth on the webhook the Worker actually calls, the dead IF node removed, and n8n returns 403 before the workflow runs if the header is wrong. The secret value never appeared in a file, a log, a response, or this chat.
+- One latent crash fixed on the way past: the internal endpoint that serves the W-9 to the approval workflow referenced a variable before it was declared, so a successful auth would have thrown instead of returning the PDF.
+- Two questions answered by reading instead of asking: the SOW gate and the W-9 request are separate webhooks in separate workflows, not a rename; and the Worker targets the production `/webhook/` path, not `/webhook-test/`.
+- Verified against production, not a test URL: after deploy, a single page view produced n8n execution 10423 with Header Auth passed; a document view produced two more. Execution count went from zero, ever, to three.
+
+**Numbers (real ones only)**
+- 3 files changed (Worker source, wrangler config, workflow JSON); 1 n8n workflow republished; 1 Worker deploy
+- 0 n8n executions before the deploy, 3 after, all successful
+- 4 form submissions during the session hit the old Worker and reached nothing
+- 3 n8n MCP write attempts rejected; 3 browser sign-ins burned before an edit stuck
+- 32 agent-minutes wall clock; 400 founder-minutes reported for the day
+- $0 revenue through this gate. The alert email itself and the reject path have not been observed post-deploy, so the COO review said Revise
+
+**What broke**
+- The n8n MCP connector could read every workflow and write none: the update call came back 400 "must NOT have additional properties" three times regardless of what was passed. The client sends a field the instance rejects; nothing on my side changes that.
+- The fallback was the browser, and the browser lost the n8n session on every navigation: three sign-ins, three bounces back to the login page. What finally worked was not navigating at all: click the workflow from the list, select-all and delete on the canvas, and dispatch a synthetic paste event carrying the corrected workflow JSON. It landed in one shot. Publish, done.
+- `wrangler tail` was started before `wrangler deploy`, so the first batch of tail output, four form submissions included, was against the old code and proved nothing. Read the terminal order before reading the terminal output.
+- A tail in pretty format shows the inbound request line and not the Worker's outbound fetch, so "did n8n get called" was only answerable from n8n's side, which is where the execution list came in.
+- The one real post-deploy notable event was accidental: the browser already held a valid gate cookie, so `/full` served the PDF instead of the form. Useful, but not the reject-path test the review asked for.
+- The COO review this time ran as a real subagent, not self-assessment. Its verdict, Revise, is correct: a gate that has proven it lets traffic through has not proven it blocks anything.
+
 ## 2026-09-05 — Conditions of Approval got a home screen icon, then a real app
 
 **What shipped**
