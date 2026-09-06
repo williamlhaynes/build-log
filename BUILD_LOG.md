@@ -2,6 +2,37 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-09-05 — Conditions of Approval got a home screen icon, then a real app
+
+**What shipped**
+- conditions.buildinhouse.com is installable. The live Cloudflare Worker now serves a web app manifest, a hand-rolled service worker, and five icon routes; the content security policy grew three directives to let those load. The service worker caches the shell, the criteria library, and the icons; it never touches `/api/*`, and it makes no call the site did not already make. The tool already rendered and exported the whole brief from local state when the save call failed, so offline mostly meant "stop pretending the shell needs the network."
+- A canonical-build decision. Two divergent builds of the same tool existed: the Worker on the domain, and a rebuild in a hosted app builder that was never wired to it. The Worker is canonical; the rebuild is stamped PROTOTYPE in its title and on every screen so nobody ships it by accident.
+- An iOS app, from a clean project, bundle ID `com.buildinhouse.conditions`: a local record library, PDF export through the native share sheet, Face ID on saved records, duplicate-from-previous. The criteria library is compiled into the app rather than fetched. The source contains no network call of any kind, which is what makes "Data Not Collected" a description rather than a claim.
+- A signed production build, produced entirely in the cloud (no Mac), submitted to App Store Connect through an API key, and sitting in TestFlight under Lamar Enterprises LLC. Future submits never touch the Apple ID.
+- The app icon: the same bracket-and-check mark the site uses, rebuilt to Apple's icon rules (opaque square, no faked corners, strokes thick enough to survive the 29-pixel Settings size). A generated shield-on-a-phone alternative was compared against those rules and against the standing no-AI-look policy, and lost.
+
+**Numbers (real ones only)**
+- 1 Worker deploy; 3 source files changed, 1 new; 5 icon routes; 3 CSP directives added
+- 44 criteria and 9 intake questions compiled into the app
+- 1,286 modules in the first on-device bundle; 235 KB uploaded to the build service
+- 4 on-device checks passed: save, force-quit and reopen, PDF export, duplicate
+- 2 failed cloud builds before the first success; build 3 reached TestFlight; build 4 (final icon) started at close
+- 1 sixty-minute Apple security delay, self-inflicted (see below)
+- 4 calendar days; founder-minutes not yet counted
+- 0 App Store users, 0 TestFlight installs confirmed, $0 revenue. The listing has no screenshots, no privacy policy URL, and has not been submitted for review
+
+**What broke**
+- The PWA work first landed on the wrong codebase. I built and tested the whole thing against the rebuild before pulling the live Worker's code from the platform API and matching it word for word against the production page. A day of work on a project that is not on the domain.
+- Safari ate most of a day. I sent William to the wrong menu four times looking for Add to Home Screen, and at one point told him to skip the one popup that actually had Share in it. On iOS 26 the path is the three-dot page menu, then Share, then scroll. The publication he wanted to attach this to slipped a day. The correct move, which I made too late, was to stop treating a button hunt as verification of work that was already verified.
+- `wrangler secret list` showed a secret whose name contained a key-shaped string, pasted into the name field at some point in the past. It matched no live key at the provider, so nothing was rotated; the secret was deleted and the shell history file removed. A `secret list` output should never be pasted anywhere, and for a while I was asking for exactly that.
+- The Apple ID that owns the developer org uses hardware security keys as its only second factor. The build CLI cannot complete a FIDO2 challenge from a terminal, and Apple does not allow a trusted-device fallback while keys are enrolled, so the keys came off for one build. Apple then imposed a sixty-minute security delay before honoring the removal. The keys went back on afterward, and the very next build failed on exactly that, until `--freeze-credentials` told the CLI to stop asking Apple anything.
+- The build service tried to package William's entire home directory because a stray `.git` folder sits at the root of it. The app got its own repo to scope the upload.
+- The first cloud build failed installing packages: a peer-dependency conflict I had papered over locally with a flag the cloud did not know about. One `.npmrc` line.
+- My sandbox could not reach the package compatibility service, so it installed a newer storage library than William's machine did; the first on-device run crashed on a method that exists in one version and not the other. Fixed in place with a one-line patch; the zip I had handed over was already behind by that line.
+- The session record could not be written to the task tracker on the first try: two writes returned "No approval received" and did nothing. Same failure as August 8. It went through a day later on retry.
+- Multi-line command blocks kept merging into one line on paste, producing errors like `Clear-Hostcd`. Everything became one-liners.
+- The COO review at close-out was self-assessment again; there is still no reviewer subagent on this surface.
+
 ## 2026-08-26 — Opened the OSS door, then spent an hour on a picture
 
 **What shipped**
