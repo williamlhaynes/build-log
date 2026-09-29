@@ -2,6 +2,35 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-09-29 — Deleted the Deploy button, shipped what actually runs
+
+**What shipped**
+- `mobile-security-guru/hyperagent` v0.1.0. For five weeks the README promised a deployable agent and carried a Deploy to Cloudflare button that deployed an empty repo. The button is gone. What ships instead is method: three seat folders (CISO, IT Director, Compliance), each with its questions, the exports to pull, and a paste-ready prompt, plus an `AGENTS.md` holding privacy rules any agent reads first. The buyer's own agent runs it against their own files. The output is a table of every action that runs through a phone, who may take it, the record that proves it, and UNKNOWN where no record does. We never receive the data. No code runs in the repo, which makes the privacy claim easy to check: read it.
+- The only thing the kit suggests sending back is a one-line summary of counts, in an email subject, and only if the user chooses to. An inbox rule labels those on arrival. That is the whole engagement signal; nothing else reports home.
+- mobilesecurity.guru had been quietly bouncing visitors to the main site. It now redirects to the repo, and the repo's description, website, and topics match the kit.
+- The Sponsors goal and introduction were rewritten to match. Sponsor events now arrive by webhook into n8n and email me, with a flag whenever one of the ten capped Founding seats is taken.
+- Role addresses: billing@ forwards a copy to the inbox I actually watch. contact@, the public email on the GitHub org, did not exist; now it does. Test messages to both landed.
+- Three 90-second video scripts, one per seat, pointing at the kit.
+- Drafted, not deployed: typed Cloudflare configs for the SOW gate and the roaming site (self-serve W-9, per-target pages, a JSON offer endpoint written for buyers' agents).
+
+**Numbers (real ones only)**
+- 17 files in the v0.1.0 commit; 1 release; 3 seat folders
+- 1 blind test by a separate agent on made-up data: sent nothing out, used no names, flagged 4 unclear instructions; all 4 fixed before release
+- 22 local tests passing on the undeployed Worker configs
+- 31 days the Sponsors application has sat in review; 1 open support ticket, no human reply yet
+- 120 founder-minutes; roughly 13 hours wall clock across two days, idle time included
+- 0 sponsors, 0 stars, 0 forks, $0 revenue
+
+**What broke**
+- The Deploy button deployed nothing for five weeks. Nobody reported it, most likely because nobody clicked it.
+- The public contact address on the GitHub org had no mailbox behind it. Mail sent there had nowhere to land.
+- The Sponsors support ticket went in on Aug 29 with two template placeholders still in it: "[DATE]" and "[EMAIL]". A second ticket was closed as a duplicate of the first. Both details went in as a comment today.
+- Sponsor notices were routed to an address nothing watched. It turned out to have never received a message, so nothing was lost. That was luck, not design.
+- Finding the .guru forward took four stops: two Cloudflare rule pages, then the registrar's forwarding panel. The cause was the website host redirecting secondary domains to the primary one. A redirect rule at the edge runs first and overrides it.
+- Direct git push was refused by the session's proxy, so the kit went up through the API as one commit. The n8n activation call failed with a 415 and the n8n editor would not render in the automated browser, so William flipped the switch by hand.
+- The first save of the Sponsors introduction did nothing: setting the field programmatically never registered with the editor. Typing it did.
+- COO review verdict: Escalate. Two follow-ups are open, including sponsor tiers that still promise support for software that is not built. Those go next.
+
 ## 2026-09-06 — The alert pipe was never connected
 
 **What shipped**
