@@ -2,37 +2,67 @@
 
 Newest first. What shipped, real numbers, what broke.
 
-## 2026-10-05 — Built a wish list for the wrong door, then moved it before launch
+## 2026-10-05 — Build In-House wish list: the asks are the lead gen
 
-**What shipped**
-- A wish list for Build In-House. An organization posts what it needs proven (CMMC Level 2 readiness, an evidence review before its assessment, a tabletop exercise, privacy or charge-only kits for staff who travel). It is listed anonymously unless it chooses to be named. A sponsor that benefits when the need is met, such as a prime that needs its suppliers to pass, funds the line at checkout. Build In-House does the work, the recipient keeps the findings, and the sponsor gets confirmation that the work happened. The asks are the point: each one is a stated need from an organization that chose to show up.
-- Four pages from one renderer: a main page plus one each for CISOs, IT directors, and compliance leads, each with its own headline, line order, and default ask. After checkout, the thank-you page puts the remaining open lines in front of the sponsor again, with the line they just funded moved to the bottom.
-- The ask form takes the least it needs to reply: the need, organization type, size band, timing, and one email. It tells people not to send CUI, contract numbers, or system names. Anonymous is the default, and the server drops the organization name unless the person chose to show it. Spam handling is a hidden field and a minimum fill time, with no CAPTCHA and no third-party script.
-- The page runs no JavaScript, makes no third-party requests, and serves its own three fonts. CSP is `default-src 'none'`, and the referrer policy is `no-referrer`. Prices appear only on the checkout page.
-- The compliance page states the dates: CMMC Phase 2 begins November 10, 2026, and from then DoD can require Level 2 certification from an authorized C3PAO on applicable contracts that involve CUI. The footer says Build In-House is not a C3PAO and does not certify, and the evidence review line says "readiness work, not a certification assessment."
-- Live behind it, with approval: a Cloudflare D1 database (items, asks, fundings, pledges) seeded with five lines, and four live Stripe products with payment links. Every checkout carries its line ID, so funded counts can be recounted from Stripe without a redeploy. The fifth line, the evidence review, takes a pledge instead of a payment because it has to be scoped with the recipient first.
-- Not live yet: the Worker itself. The deploy package is on the founder's machine, one command away.
-- Earlier in the session, a sourcing pass to stock the kits: a dropship vendor and a print-on-demand vendor compared, and 50 privacy and security items ranked by authority, perceived value, and price.
+**What I built**
+Small organizations carry the same proof obligations as large ones (a CMMC Level 2 assessment, a client security questionnaire, staff who charge their phones in airports) with less budget to meet them. The Build In-House wish list lets an organization post what it needs proven, anonymously by default, and lets a sponsor that benefits when the need is met fund the line. Build In-House does the work, the recipient keeps the findings, and the sponsor gets confirmation that it happened. The asks are the lead gen: each one is a stated need from an organization that chose to show up. Status: built and tested, deploy pending. This entry gets its link once the live page is verified.
+
+**How it works**
+- One Cloudflare Worker renders four audience pages (everyone, CISOs, IT directors, compliance leads) from one template, each with its own headline, line order, and default ask.
+- The lines live in a D1 table, so adding, retiring, or reopening a line is a row change, not a redeploy.
+- "Fund this" redirects to a Stripe Payment Link carrying a `client_reference_id` that names the line. Checkout returns to `/thanks?session_id={CHECKOUT_SESSION_ID}`, which puts the remaining open lines in front of the sponsor again, with the one they just funded moved last.
+- Funded counts are recounted from Stripe's completed sessions, so day one needs no webhook and no stored secret.
+- Scoped work (the pre-assessment evidence review) takes a pledge instead of a payment, because it has to be scoped with the recipient before anyone pays.
+
+**Take it: six checks for an intake form regulated buyers will use**
+Each one is a yes or no. Run them against your own form.
+1. Does the form ask only for what you need to reply? Ours takes the need, organization type, size band, timing, and one email.
+2. Does it tell people what not to send? Ours says no CUI, no contract numbers, no system names.
+3. Is anonymous the default, and is it enforced on the server? Ours drops the organization name server-side unless the person chose to show it.
+4. Does the page load anything from a third party? Ours runs no JavaScript, serves its own fonts, and sends `Content-Security-Policy: default-src 'none'` with `Referrer-Policy: no-referrer`.
+5. Can you stop spam without a CAPTCHA vendor? Ours uses a hidden field and a minimum fill time.
+6. Does the price wait for the order step? Ours appears only on the Stripe checkout page.
+
+Two patterns worth copying. The "show my name" toggle needs no script:
+
+```css
+form:has(#listing-anon:checked) .orgname { display: none; }
+```
+
+And the redirect that tags every checkout with the line it funds:
+
+```js
+const u = new URL(item.payment_link_url);
+u.searchParams.set('client_reference_id', 'wishlist_' + item.id);
+return Response.redirect(u.toString(), 302);
+```
+
+**What I checked before shipping**
+- 63 of 63 local checks: lane routing, spam drops, anonymous listing, Fund redirects, Stripe session verification, idempotent recounts, and copy rules (no prices, no banned phrases) across every rendered page.
+- Every page at desktop and phone width, in light and dark.
+- Session IDs are pattern-checked before any call to Stripe, and a repeated visit to the thank-you page cannot count a funding twice.
+- No inline styles anywhere, because the CSP would block them.
+- Not yet checked: the live page. That runs after the deploy.
 
 **Numbers (real ones only)**
-- 252 catalog listings captured in the main pass, 175 kept after relevance filtering, 57 scored, 50 ranked
-- 2 kit parts the catalog does not carry: a USB data blocker and a phone-size faraday pouch
 - 5 wish-list lines; 4 audience pages plus thank-you, ask-received, and pledge pages
-- 63 of 63 local checks passing (lane routing, spam drops, anonymous listing, Fund redirects, checkout verification, idempotent recounts, copy checks)
-- 232 KB Worker bundle, fonts included
-- 4 live Stripe products, 4 payment links, 1 database with 4 tables
+- 4 live Stripe products with payment links; 1 database with 4 tables
+- 232 KB Worker bundle, three fonts included
+- Sourcing pass for the kits: 252 catalog listings captured, 175 kept after relevance filtering, 57 scored, 50 ranked; 2 kit parts the catalog does not carry (a USB data blocker and a phone-size faraday pouch)
 - 120 founder-minutes; 77 minutes agent wall clock
-- 0 asks, 0 pledges, $0 revenue. The page is not deployed
+- 0 asks, 0 pledges, $0 revenue. Not deployed yet
 
 **What broke**
 - I built it for the wrong door. The word "sponsor" sent it to mobilesecurity.guru, the build-in-public surface where GitHub Sponsors lives. William asked whether it should be Build In-House. The portfolio canon in Linear says paid engagements belong on the consulting surface, and every line on this list is a paid engagement billed by Build In-House. It was rebranded and retargeted before anything went live. A two-minute canon check at the start would have skipped the detour.
-- The "Fund this" buttons rendered 300 pixels wide and spilled out of their column. The button variant class was `line`, which was also the class on each requisition row, a four-column grid. The button inherited the grid. The first screenshot caught it; no test covered it.
+- The "Fund this" buttons rendered 300 pixels wide and spilled out of their column. The button variant class was `line`, which was also the class on each requisition row, a four-column grid, so the button inherited the grid. The first screenshot caught it; no test covered it.
 - The bundler embedded the fonts with `Uint8Array.fromBase64`, which the local Node runtime does not have, so the first test run crashed on import. Pinning the build target to ES2022 brought back the portable decoder.
-- The catalog search is fuzzy enough to be wrong. "Signal blocking bag" returned color-blocking pants and swimsuits, "webcam cover" returned beach cover-ups, and "USB data blocker" returned a charging adapter. The catalog's embedded product data had prices and no names, so the list came from the rendered page, a dozen cards at a time.
+- The catalog search is fuzzy enough to be wrong. "Signal blocking bag" returned color-blocking pants and swimsuits, "webcam cover" returned beach cover-ups, and "USB data blocker" returned a charging adapter.
 - A GPS "interference blocker" showed up beside the privacy gear. It is a jammer, illegal to sell or use in the US, and it stayed off the list.
-- One browser batch timed out mid-run, and the extension refused one navigation as an unverified site. Smaller batches got through.
 - `pkill` matched its own shell and killed the command (exit 144). It has done this before.
-- The payment links went live before the page did, and the two kits cannot ship until their missing parts are sourced. COO review verdict: Revise, with pausing the kit links as the next action.
+- The payment links went live before the page did, and the two kits cannot ship until their missing parts are sourced.
+
+**Next**
+Deploy, verify the live page, then decide whether the two kit links pause until their parts are sourced. COO review verdict: Revise.
 
 ## 2026-09-29 — Deleted the Deploy button, shipped what actually runs
 
