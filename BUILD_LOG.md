@@ -2,6 +2,38 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-10-05 — Built a wish list for the wrong door, then moved it before launch
+
+**What shipped**
+- A wish list for Build In-House. An organization posts what it needs proven (CMMC Level 2 readiness, an evidence review before its assessment, a tabletop exercise, privacy or charge-only kits for staff who travel). It is listed anonymously unless it chooses to be named. A sponsor that benefits when the need is met, such as a prime that needs its suppliers to pass, funds the line at checkout. Build In-House does the work, the recipient keeps the findings, and the sponsor gets confirmation that the work happened. The asks are the point: each one is a stated need from an organization that chose to show up.
+- Four pages from one renderer: a main page plus one each for CISOs, IT directors, and compliance leads, each with its own headline, line order, and default ask. After checkout, the thank-you page puts the remaining open lines in front of the sponsor again, with the line they just funded moved to the bottom.
+- The ask form takes the least it needs to reply: the need, organization type, size band, timing, and one email. It tells people not to send CUI, contract numbers, or system names. Anonymous is the default, and the server drops the organization name unless the person chose to show it. Spam handling is a hidden field and a minimum fill time, with no CAPTCHA and no third-party script.
+- The page runs no JavaScript, makes no third-party requests, and serves its own three fonts. CSP is `default-src 'none'`, and the referrer policy is `no-referrer`. Prices appear only on the checkout page.
+- The compliance page states the dates: CMMC Phase 2 begins November 10, 2026, and from then DoD can require Level 2 certification from an authorized C3PAO on applicable contracts that involve CUI. The footer says Build In-House is not a C3PAO and does not certify, and the evidence review line says "readiness work, not a certification assessment."
+- Live behind it, with approval: a Cloudflare D1 database (items, asks, fundings, pledges) seeded with five lines, and four live Stripe products with payment links. Every checkout carries its line ID, so funded counts can be recounted from Stripe without a redeploy. The fifth line, the evidence review, takes a pledge instead of a payment because it has to be scoped with the recipient first.
+- Not live yet: the Worker itself. The deploy package is on the founder's machine, one command away.
+- Earlier in the session, a sourcing pass to stock the kits: a dropship vendor and a print-on-demand vendor compared, and 50 privacy and security items ranked by authority, perceived value, and price.
+
+**Numbers (real ones only)**
+- 252 catalog listings captured in the main pass, 175 kept after relevance filtering, 57 scored, 50 ranked
+- 2 kit parts the catalog does not carry: a USB data blocker and a phone-size faraday pouch
+- 5 wish-list lines; 4 audience pages plus thank-you, ask-received, and pledge pages
+- 63 of 63 local checks passing (lane routing, spam drops, anonymous listing, Fund redirects, checkout verification, idempotent recounts, copy checks)
+- 232 KB Worker bundle, fonts included
+- 4 live Stripe products, 4 payment links, 1 database with 4 tables
+- 120 founder-minutes; 77 minutes agent wall clock
+- 0 asks, 0 pledges, $0 revenue. The page is not deployed
+
+**What broke**
+- I built it for the wrong door. The word "sponsor" sent it to mobilesecurity.guru, the build-in-public surface where GitHub Sponsors lives. William asked whether it should be Build In-House. The portfolio canon in Linear says paid engagements belong on the consulting surface, and every line on this list is a paid engagement billed by Build In-House. It was rebranded and retargeted before anything went live. A two-minute canon check at the start would have skipped the detour.
+- The "Fund this" buttons rendered 300 pixels wide and spilled out of their column. The button variant class was `line`, which was also the class on each requisition row, a four-column grid. The button inherited the grid. The first screenshot caught it; no test covered it.
+- The bundler embedded the fonts with `Uint8Array.fromBase64`, which the local Node runtime does not have, so the first test run crashed on import. Pinning the build target to ES2022 brought back the portable decoder.
+- The catalog search is fuzzy enough to be wrong. "Signal blocking bag" returned color-blocking pants and swimsuits, "webcam cover" returned beach cover-ups, and "USB data blocker" returned a charging adapter. The catalog's embedded product data had prices and no names, so the list came from the rendered page, a dozen cards at a time.
+- A GPS "interference blocker" showed up beside the privacy gear. It is a jammer, illegal to sell or use in the US, and it stayed off the list.
+- One browser batch timed out mid-run, and the extension refused one navigation as an unverified site. Smaller batches got through.
+- `pkill` matched its own shell and killed the command (exit 144). It has done this before.
+- The payment links went live before the page did, and the two kits cannot ship until their missing parts are sourced. COO review verdict: Revise, with pausing the kit links as the next action.
+
 ## 2026-09-29 — Deleted the Deploy button, shipped what actually runs
 
 **What shipped**
