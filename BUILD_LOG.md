@@ -2,6 +2,75 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-10-06 — A campaign inbox that drafts every reply and sends none without my tap
+
+**What I built**
+My Atlanta Pride privacy campaign (Oct 10-11, 2026) prints one contact address on its cards and pages. I want every message answered fast, and nothing going out that I didn't read. A message arrives, a language model sorts it into a lane and drafts a reply from an answer library I approved, and I get one alert with the draft and a review link. I edit or don't, tap Send, and the reply leaves from the campaign address, threaded under theirs. Nothing sends without that tap.
+
+The desk is the first build under a rule I now hold my own agents to: every action with an outside effect gets a yes, a no, or a step up before it runs, and leaves a record I can show later. I wrote the rule on 2026-10-05 after three actions ran past my authority while the agent was signed in the whole time (details under What broke).
+
+Status: built and tested; sending domain verified on 2026-10-06; deploy pending as of 2026-10-06. This entry gets its link once the desk answers live mail.
+
+**How it works**
+- Cloudflare Email Routing hands each message for the campaign address to a Worker. Mail from machines (auto-replies, bounces, mailing lists, the campaign's own domain) is dropped before anything is stored.
+- The Worker stores the message in D1 and asks the model for a lane, a one-line summary and a draft. Four of the eight lanes (privacy requests, member help, press, personal or safety) are marked mine: the draft holds the line and I answer personally.
+- The alert reaches my inbox through Resend with a signed review link that expires after 14 days.
+- Send claims the message first, so a second tap cannot send twice, then the exact text in the box goes out through Resend with threading headers.
+- A cron every 15 minutes retries failed drafts and alerts and deletes anything older than 90 days.
+
+**Take it: seven checks for any agent wired to real accounts**
+Each one is a yes or no.
+1. Does every action with an outside effect wait for a person's yes? Ours: posts, deploys, DNS, money and new access wait. Drafts and reads don't.
+2. Does an approval cover only what you saw? Ours: what goes out is exactly the text in the box at the tap. An edit means a new approval.
+3. Can the agent give itself new access? Ours: no. New keys, repo access or tools need their own yes.
+4. When a yes leaves a value open, does the agent ask about that value? Ours: yes, on that value only.
+5. Does "unknown" ever count as yes? Ours: never.
+6. Can you take a yes back before the action runs? Ours: yes, and the action does not run.
+7. Does every decision leave a record you could hand someone? Ours: what it touched, the decision, the time.
+
+Two patterns worth copying. One approval, one send:
+
+```js
+const claim = await env.DB.prepare(
+  "UPDATE messages SET status='sending' WHERE id=? AND status IN ('drafted','held')"
+).bind(id).run();
+if (claim.meta.changes !== 1) return alreadyHandled();
+```
+
+Never draft a reply to a machine:
+
+```js
+const auto = get('auto-submitted');
+if (auto && auto.toLowerCase() !== 'no') return 'skip';
+if (/^(bulk|junk|list)$/i.test(get('precedence'))) return 'skip';
+if (get('list-id') || get('list-unsubscribe')) return 'skip';
+```
+
+**What I checked before shipping**
+- 79 of 79 local checks, including: replies leave only from the campaign address and never carry my company address; a tampered review link is refused; a second Send is refused; a failed send keeps the edited text and sends nothing; machine mail is skipped and not stored; inbound HTML is escaped; messages past 90 days are deleted; the health check names keys without printing them.
+- The review page runs no JavaScript and sends `Content-Security-Policy: default-src 'none'`, `Referrer-Policy: no-referrer`, `noindex` and `no-store`. Checked at phone width in light and dark.
+- Open and click tracking off on the sending domain. A send-only key limited to that one domain. DMARC at quarantine.
+- Not yet checked: live mail end to end. That runs after the deploy.
+
+**Numbers (real ones only)**
+- 1 Worker (157 KB bundle), 1 database with 2 tables, 8 lanes, 11 facts in the answer library
+- 5 DNS records added for sending, plus Email Routing's own
+- 79 of 79 local checks
+- Caps: 5 drafts per sender per day, 200 per day
+- 0 messages received, 0 replies sent, $0 revenue. Not deployed yet
+
+**What broke**
+- On 2026-10-05, with the agent signed in throughout: a build log entry went public before I confirmed it, push access to the repo was attached without asking, and a tax setting got picked that my yes didn't cover. That is where the rule above came from.
+- The first render put the reply box and buttons in fallback fonts. `font: 16px/1.5 inherit` is invalid CSS because `inherit` can't sit inside a shorthand, so the browser dropped the whole line. The screenshot caught it; no test did.
+- A test that scans the answer library for a banned word failed on the rule that names the word. The rule text appears twice and `replace` only strips the first. `replaceAll` fixed it.
+- Screenshots of the DNS page timed out in the browser, so the records went in through the dashboard's own API from the signed-in page.
+- The remote shell on my machine turned out to be Linux with my Downloads folder mounted, so the first unpack command (written for PowerShell) failed.
+
+**Next**
+Deploy, route the campaign address to the desk, send a test from a phone, then run it through Pride weekend.
+
+Look-back check, 2026-10-13: the next entry reports how many messages the desk received over Oct 10-11, how many replies went out, and how many went out without a tap (the target is zero).
+
 ## 2026-10-05 — Build In-House wish list: the asks are the lead gen
 
 **What I built**
