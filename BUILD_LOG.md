@@ -2,6 +2,73 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-10-07 — Wish list: pause the lines you can't ship, in both places
+
+**What I built**
+The Build In-House wish list lets an organization post what it needs proven and lets a sponsor fund the line. Two of its five lines are physical kits, and both were waiting on parts that weren't sourced yet. Selling a kit I can't ship turns a sponsor's goodwill into a refund. So the kits are paused, and the rest of the list keeps taking funding. This settles the open decision from the 2026-10-05 entry.
+
+The other three calls were made on 2026-10-07. Prices stay as set. Sales tax stays on for the kits, now with my yes on record. The tabletop exercise is defined as one 2-hour session for up to 12 people, plus the after-action record.
+
+Status: the Stripe change was live on 2026-10-07; the page update is built and tested, deploy pending as of 2026-10-07. This entry gets its link once the page is verified live.
+
+**How it works**
+- Stripe: both kit payment links set inactive. Anyone holding an old link gets "This line is closed for now" and a pointer back to the list.
+- D1: a `paused` column on the items table. The deploy script adds the column, pauses the two kit lines and sets the new tabletop copy before it publishes the Worker, so the page and the data change together. It can run twice: the column step errors if the column exists and the script carries on, and the updates set fixed values.
+- The page: a paused line stays on the list with a "Back soon" state and no Fund button, sorts after the open lines, and drops out of the "Still open" list a sponsor sees after checkout. The open count reads 3 and leaves the paused lines out.
+- The direct route: `/fund/<line>` for a paused line returns to the list instead of opening checkout.
+
+**Take it: seven checks for pausing something you can't deliver yet**
+Each one is a yes or no.
+1. Does the payment link stop taking money? Ours: inactive in Stripe, with a message pointing back to the list.
+2. Does the page say so without hiding the line? Ours: "Back soon", no Fund button.
+3. Can an old direct link still reach checkout? Ours: no, it returns to the list.
+4. Does the upsell skip it? Ours: the post-checkout list leaves paused lines out.
+5. Does the count tell the truth? Ours: "3 lines open", counting only lines that can be funded.
+6. Does a line people can fund lead the page? Ours: paused lines sort last.
+7. Is the restart written down for both places? Ours: set `paused` back to 0 and reactivate both links.
+
+The guard and the sort:
+
+```js
+const isPaused = (i) => Number(i.paused) === 1;
+
+// /fund/:id never reaches checkout for a paused line
+const it = items.find((i) => i.id === id && i.status === 'open' && !isPaused(i));
+if (!it) return redirect('/#open', 302);
+
+// paused lines stay visible but sort after the open ones
+const list = ordered(open, lane).sort((a, b) => isPaused(a) - isPaused(b));
+```
+
+**What I checked before shipping**
+- 68 of 68 local checks, up from 63: a paused kit never reaches checkout, both kits read "Back soon" with no Fund link, the open count skips paused lines, the tabletop copy reads 2 hours, and each audience page leads with a line that can be funded.
+- The pages rendered at desktop and phone width, light and dark, on 2026-10-07: no horizontal overflow, and the kits sit below the open lines.
+- Both kit links read back from Stripe as inactive, with the closed message, on 2026-10-07.
+- Not yet checked: the live page. That runs after the deploy.
+
+**Numbers (real ones only)**
+- 5 lines: 3 open, 2 paused, as of 2026-10-07
+- 2 payment links set inactive on 2026-10-07; 4 links in total
+- 0 Checkout Sessions on any of the 4 links since they were created (checked 2026-10-07)
+- 68 of 68 local checks
+- 15 founder-minutes; 23 agent-minutes measured for the build, plus an untimed status check and decision step
+- $0 revenue. Page not deployed as of 2026-10-07
+
+**What broke**
+- The 2026-10-05 entry said deploy pending. As of 2026-10-07 it still is. Nothing on this list can be funded until the page goes up.
+- The kits' sales-tax setting had been picked by the agent on 2026-10-05 without my yes. On 2026-10-07 it got its own question and a recorded answer. The rule from the 2026-10-06 entry, applied: a yes that leaves a value open gets asked about that value.
+- The question itself was wrong on one point. It said tax is figured from the ship-to address. The kit links don't collect one, so it is figured from the sponsor's billing address. Corrected after the answer, and logged with the decision.
+- The first patch, run as inline Python, failed on a quoting syntax error before it touched a file. Rewritten as a script file.
+- Two lane-order checks failed once paused lines moved to the end: they still expected a kit to lead two audience pages. Updated to expect the first open line.
+- The Stripe update call failed until the link's ID went in as `id` rather than `payment_link`.
+- `pkill` matched its own shell again during the render check (exit 144), the same failure logged on 2026-10-05. The renders had finished.
+- The site can't be reached from the build session's network, so live status comes from the deploy output, not from me. Live page status as of 2026-10-07: UNKNOWN.
+
+**Next**
+Run the deploy, confirm on the live page that the kits read "Back soon" and the other Fund buttons open checkout, then source the missing kit parts and restart the kits in both places. COO review verdict: Revise.
+
+Look-back check, 2026-10-14: wishlist.buildinhouse.com answers, and the next entry reports, with dates, how many asks came in and whether the kits are back on.
+
 ## 2026-10-06 — A campaign inbox that drafts every reply and sends none without my tap
 
 **What I built**
