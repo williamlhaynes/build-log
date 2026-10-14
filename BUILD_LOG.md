@@ -2,6 +2,81 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-10-13 — An Upwork listing that sells the test after setup, and a cover the crop cut in half
+
+**Closed loops**
+- Look-back check, 2026-10-13 (set in the 2026-10-06 entry): report desk messages received over Oct 10-11, replies sent, and replies sent without a tap. Not checked in this session. Status: UNKNOWN. Missed, and carried to the next entry.
+
+**What I built**
+Companies roll out Intune or another device manager, the console says the BYOD policy is on, and nobody tests what a personal phone actually does. Can a user paste company email into a personal app? Does an offboarded employee keep mail on their phone? Setup is the part that gets bought.
+
+So I put the proof on Upwork as a fixed-price Project Catalog listing: a pass/fail record of what a personal iPhone and Android phone do, tested against the company's own BYOD policy, with the exact setting behind each failure and a fix list ranked by risk. It serves IT leads and MSPs who need evidence they can hand an auditor or insurer.
+
+The search behind it, on 2026-10-13: Upwork's catalog returned 24 projects for "BYOD". Most were setup work, and the review counts sat with broad support offers. None of the listings in my screenshots of those results offered testing after setup.
+
+Status: submitted on 2026-10-13 and approved by Upwork the same day. Public listing URL not recorded in this entry, so no link.
+
+**How it works**
+- Three tiers that step up in kind: a config review from screenshots or exports (no admin access), then a live test on two personal phones signed in as a regular employee, then the test plus a written policy matched to what is actually enforced and one retest.
+- Two add-ons: a second device-management platform, and a retest after fixes.
+- One mandatory requirement (platform plus policy exports) and two optional ones. Upwork cancels an order if mandatory requirements aren't in within 48 hours, so the mandatory list stays short.
+- The work is read-only. Fixes go on a list for the client's team or MSP.
+- Gallery: a center-safe cover, a second image, and a one-page sample record PDF built on a fictional tenant (12 checks, 8 pass, 4 fail, each failure tied to a real setting).
+
+**Take it: seven checks for a fixed-price service listing**
+Each one is a yes or no.
+1. Can a buyer say yes without granting access? Ours: the first tier runs on screenshots.
+2. Does the cover survive the platform's square crop? Ours: rebuilt so the headline and record sit in the center.
+3. Does the sample show failures? Ours: 4 of 12 fail, on a tenant labeled fictional.
+4. Is the mandatory requirement list one item long? Ours: yes.
+5. Does each tier add a different kind of work? Ours: review, then live test, then policy and retest.
+6. Is out-of-scope written down? Ours: setup, migration, ongoing management.
+7. Does the founder tick the terms boxes? Ours: the agent filled the listing and stopped before Submit.
+
+The crop check, before upload:
+
+```python
+from PIL import Image
+
+im = Image.open("cover.png")       # landscape cover
+w, h = im.size
+side = min(w, h)                   # the square tile
+left = (w - side) // 2
+im.crop((left, 0, left + side, side)).save("tile-preview.png")
+# open tile-preview.png: if the headline is cut, fix the cover
+```
+
+**What I checked before shipping**
+- The sample record names no real company and carries "Sample, fictional tenant" on the page and on both images.
+- The PDF page count read 1 after the final render.
+- The cover was viewed at full width and at the center square before upload.
+- The rendered image and PDF source were scanned for em-dashes: 0.
+- No credentials were typed by the agent. I signed in to Upwork myself and accepted the terms myself.
+- Not yet checked: how the live listing renders in mobile search, and whether the two test phones and test accounts are ready for the first live-test order.
+
+**Numbers (real ones only)**
+- 24 catalog projects for "BYOD" on 2026-10-13
+- 1 listing, 3 tiers, 2 add-ons, 3 requirements, 5 FAQs
+- 12 checks in the sample record: 8 pass, 4 fail
+- 120 founder-minutes
+- Orders as of 2026-10-13: none reported. $0 revenue
+
+**What broke**
+- Chrome on my machine wasn't signed in to Upwork, so the agent stopped at the login page and waited for me.
+- The first cover was a split layout. Upwork's tile crops to the center square, and the headline came out cut in half. Caught in the upload preview, rebuilt center-safe, and kept the original as image two.
+- The sample PDF spilled its footer onto a second page twice before it fit on one.
+- The first browser-engine install exited with an error; the retry worked.
+- One screenshot call failed because another extension's page was in front.
+- Em-dashes got into the session record and were patched after it was saved.
+- The 2026-10-13 look-back check above was not run.
+
+Operating rules for the next listing: preview the platform's crop before you design the cover, and stop the agent before any terms box.
+
+**Next**
+Confirm the test phones and test accounts before the first live-test order, then start daily job-post applications alongside the listing. COO review verdict: Ship.
+
+Look-back check, 2026-10-27: the next entry reports, with dates, orders and buyer messages on this listing and the number of job-post applications sent.
+
 ## 2026-10-07 — Wish list: pause the lines you can't ship, in both places
 
 **What I built**
