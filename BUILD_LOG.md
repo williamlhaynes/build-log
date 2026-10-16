@@ -2,6 +2,77 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-10-16 — Reservations instead of discounts, and a test record readers can run themselves
+
+**Closed loops**
+- Look-back check, 2026-10-13 (set in the 2026-10-06 entry, carried in the 2026-10-13 entry): desk messages received over Oct 10-11, replies sent, and replies sent without a tap. Not checked again. Status: UNKNOWN. Still carried.
+
+**What I built**
+On 2026-10-13 the BYOD acceptance test went up for sale. Between 2026-10-13 and 2026-10-16 I changed how it gets bought and gave the method away.
+
+Buying: the test does not get discounted, including the version where a company pays less in exchange for feedback. Every engagement starts with a paid reservation that holds the test dates and credits in full toward the engagement. Three payment links carry the same reservation, one per channel (the newsletter, LinkedIn, MSP referrals), so each booking shows where it came from.
+
+Giving away: Issue 026 of The Friday Brief made the method public. It ships with a spreadsheet, the BYOD Acceptance Record, so a security team can run five checks on one personal phone without hiring anyone. Status: William reports the issue published on 2026-10-16. A fetch of the issue page at 15:30 UTC that day returned the site's home page instead, so the page itself is unverified and this entry carries no link.
+
+Alongside it, I wrote 15 letters to security leaders, each tied to one dated public fact about that person's company.
+
+**How it works**
+- The record has three tabs: setup instructions, the record itself, and an offboarding timer.
+- Each row holds the policy promise, the expected result, the device and its configuration, the observed result with a timestamp, a verdict, and a named owner for the fix.
+- The expected result is written before anyone touches the phone. If the policy allows an action, the expected result is that it works.
+- Verdicts come from a dropdown with four values: Pass, Fail, Inconclusive, Not applicable.
+- Offboarding is timed three ways from the moment the account is disabled: when new mail stops, when messages already on the phone stop opening, and when company data leaves the app.
+- Any step that changes state (disable, revoke, wipe) is run by the client's own admin, on a dedicated test account with test data.
+
+**Take it**
+Five checks for any test record you plan to hand an auditor. Yes or no.
+1. Is the expected result written down before the test runs? Ours: yes, a column filled from the written policy.
+2. Can a row end as Inconclusive? Ours: yes. A forced pass or fail hides what nobody observed.
+3. Does the record say what it does not cover? Ours: one phone is evidence for that phone's configuration, stated on the record.
+4. Is offboarding measured in minutes rather than marked done? Ours: three timestamps, counted from the disable.
+5. Does every failure have a named owner? Ours: a required column.
+
+The two formulas that do the counting:
+
+```
+Minutes after disable (row 8, disable time in B5):
+=IF(AND(ISNUMBER($B$5),ISNUMBER(B8)),ROUND((B8-$B$5)*1440,0),"")
+
+Rows still without a verdict:
+=COUNTA($B$12:$B$21)-COUNTA($K$12:$K$21)
+```
+
+**What I checked before shipping**
+- The spreadsheet recalculated with 0 errors across 11 formulas. A test copy with a 14-minute gap returned 14, and two verdicts produced the right counts.
+- Every news item in the issue was checked against a primary source or the original reporting, and one vulnerability ID was confirmed against the vendor's own advisory.
+- An outside critique of the draft was applied before publishing (details under What broke).
+- The issue, the record and the letters were scanned for em dashes: 0.
+- The newsletter and the record show no price; the price appears only at checkout.
+- Not yet checked: who sent seven of the letters (see What broke), whether the issue page is live, and whether the marketplace listing edit saved.
+
+**Numbers (real ones only)**
+- 15 letters: 7 by email, 8 as LinkedIn messages handed over for sending
+- 4 news items in Issue 026, 5 checks in the record, 11 formulas
+- 3 payment links, 1 reservation price
+- Completed reservations 2026-10-13 to 2026-10-16: 0. Revenue: $0
+- 420 founder-minutes
+
+**What broke**
+- I was asked to draft Issue 027 for 2026-10-16. The archive and the content plan both made it 026. Caught before drafting.
+- The seven emails were created as Outlook drafts and turned up in Sent Items within 30 seconds of one another, with nothing left in Drafts. Who pressed send is UNKNOWN. The standing rule is that the agent drafts and William sends, so this is the open item.
+- The first draft of the issue overclaimed. It treated offboarding exposure as a flat hour, when sign-out can arrive within minutes where the app supports it. It called the work read-only while the tests disable accounts and wipe data. It promised "the exact setting" behind every failure before any diagnosis. An outside critique caught all three before the issue went out.
+- Most of the 15 titles could not be confirmed from a current public source, and one contact had left his company in July.
+- Moving two content items back a week stacked two items on 2026-10-30.
+- The spreadsheet's first tab printed with its text cut off. Fixed with fit-to-width.
+- The listing edit stopped at the terms boxes, by rule, and waits on William.
+
+Operating rules for the next record: write the expected result before the test, and check every recipient's current title before the letter goes out.
+
+**Next**
+Confirm who sent the seven emails, then send the follow-ups on 2026-10-21 with the record attached as a link. COO review verdict: Escalate, on the seven emails.
+
+Look-back check, 2026-10-30: the next entry reports completed reservations from the three payment links and replies to the 15 letters, each with dates.
+
 ## 2026-10-13 — An Upwork listing that sells the test after setup, and a cover the crop cut in half
 
 **Closed loops**
