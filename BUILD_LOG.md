@@ -2,6 +2,71 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-10-20 — A fixed-IP supplier gateway, and why least privilege needs an owner for every address
+
+**Closed loops**
+- Look-back check, 2026-10-13 (set in the 2026-10-06 entry): desk messages received over Oct 10-11, replies sent, and replies sent without a tap. Not checked this session. Status: UNKNOWN. Still carried.
+
+**What I built**
+A supplier that fulfils our orders started refusing every call with a 403. Its partner API keeps an IP allowlist, and around 2026-09-01 I turned that allowlist on as a least-privilege decision: only addresses I named could call it. The plan was to add the address of the new order service as soon as I had it. That address never arrived, and the existing Worker on Cloudflare has no fixed outbound address to add, so the allowlist blocked our own traffic. Orders had worked earlier in the year, including the first customer order in January, before the allowlist went on.
+
+The fix is a small gateway on a container host with static outbound IPs. Every supplier call now leaves from addresses I own and can list. The legacy Worker points its base URL at the gateway, and the new order service will use the same gateway with its own key.
+
+Status: catalog sync live and verified on 2026-10-20 at 19:00 UTC through the gateway. Real order fulfilment switched back on 2026-10-20 at about 20:05 UTC. A live order through the gateway is pending as of 2026-10-20.
+
+**How it works**
+- Callers authenticate to the gateway with their own key, either in a header or as a path segment for callers that can only change a base URL.
+- The gateway holds no supplier credentials. Supplier tokens pass through untouched.
+- Each supplier has an allowlist of method and path pairs. Six routes are open for this one: token, catalog, orders, order lookup, usage lookup, balance. Anything else gets a 403 from the gateway before it leaves.
+- One environment variable pauses all supplier traffic.
+- Logs record caller, method, path, status, and timing. No bodies, no customer data.
+
+**Take it**
+Checks you can run on any outbound integration:
+1. Can you list every IP address your supplier sees from you? (This build: yes, three, from one host.)
+2. Does each internal caller have its own credential, so one can be revoked alone? (Yes, two keys.)
+3. Is the set of supplier endpoints you can reach smaller than the set the supplier offers? (Yes, six routes.)
+4. Can you stop all traffic to one supplier with one switch, without a deploy? (Yes.)
+5. Do your logs prove what happened without holding what customers sent? (Yes, metadata only.)
+
+The allowlist pattern, generic:
+```ts
+const ALLOW: Array<[string, RegExp]> = [
+  ["POST", /^\/token$/],
+  ["GET",  /^\/orders(\/[A-Za-z0-9_-]+)?$/],
+];
+const ok = ALLOW.some(([m, re]) => m === req.method && re.test(path));
+if (!ok) return new Response('{"error":"path_not_allowed"}', { status: 403 });
+```
+
+**What I checked before shipping**
+- Caller keys compared in constant time. Unknown keys get 401.
+- Request bodies forwarded only on non-GET calls; only authorization, content-type and accept headers pass through.
+- Every binding on the Worker re-read after each settings change on 2026-10-20: base URL secret, sync secret, payment secrets and storage all present.
+- Order fulfilment stayed in dry-run until the catalog sync returned 200, then went live on my approval.
+- Not yet checked: a live order end to end through the gateway, and failover if the host goes down.
+
+**Numbers (real ones only)**
+- 158 catalog items synced on 2026-10-20 at 19:00 UTC
+- 6 allowed routes, 2 caller keys, 3 static outbound addresses
+- Orders placed through the gateway as of 2026-10-20 20:10 UTC: none recorded. Revenue from this session: $0
+- 30 founder-minutes
+
+**What broke**
+- The agent first reported that orders through this supplier had never worked. That was wrong. The first customer order went through in January. The record had to be corrected before the fix could be chosen.
+- An outgoing reply to the supplier claimed hourly sync was running before it was. It stayed a draft and was deleted on 2026-10-20.
+- Adding the sync secret failed because the name was already bound as a plain variable. Fixed by changing the binding type.
+- The agent's container could not reach the gateway host directly, so it was tested from the browser and confirmed in the host's request logs.
+- A workflow tool refused updates through its API, so two edits went back to me as manual steps.
+- A follow-up reminder was scheduled for a time already past and failed.
+
+Operating rule for the next least-privilege change: name the owner and the address of every caller before the restriction goes on, and keep a gateway ready for callers that have no fixed address.
+
+**Next**
+Place one low-cost live order through the gateway and confirm fulfilment and the payment record. COO review verdict: Revise, on that order.
+
+Look-back check, 2026-11-03: the next entry reports orders fulfilled through the gateway since 2026-10-20 and any gateway errors, each with dates.
+
 ## 2026-10-16 — Reservations instead of discounts, and a test record readers can run themselves
 
 **Closed loops**
