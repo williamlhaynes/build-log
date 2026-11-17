@@ -2,6 +2,79 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-11-17 — An agent that has to ask before every action, and the traces that show it being refused
+
+**Closed loops**
+- Look-back checks set in earlier entries and due on or before 2026-11-17: 2026-10-13 (desk messages and replies), 2026-10-14 (wish list asks), 2026-10-27 (Upwork orders), 2026-10-30 (reservations and replies to 15 letters), 2026-11-03 (orders through the gateway). None was run in this session. Status of each: UNKNOWN. Carried. The latest entry before this one is dated 2026-10-20, so there is also a gap in the record itself.
+
+**What I built**
+An AI agent that can call tools will call them whenever its prompt allows. The control that was missing is a decision made outside the agent, before each action, that returns yes, no, or step up first, with a record a person can read afterward. I built a sandbox for that decision and wired a test agent to it so the behavior can be watched, not described.
+
+The agent has one rule: before any consequential tool call, ask the sandbox. Proceed only on yes. On step up, ask the user to complete the step, then ask again. On no, or on a failed call, stop and say so.
+
+It serves security and platform teams who need evidence that their agents stop when they should. It proves the stop cases, which are the ones that usually go untested.
+
+Status: live and verified on 2026-11-17. The sandbox answers the full set of test cases below, a hosted agent calls it, and 23 agent runs were captured in the platform's tracing between about 4:55 PM and 5:16 PM local on 2026-11-17. Link at the end.
+
+**How it works**
+- The sandbox exposes four tools to the agent over MCP: ask for a decision, check a decision's status, list the test cases, and run a scripted pack of cases.
+- Seven named test actors each trigger one condition: allowed, no authority, revoked, step up needed, step up completed but context invalid, unknown state, and revoked after a yes was issued.
+- Every decision comes with a signed record. A status call reports whether that record is still active.
+- The hosted agent asks for a person's approval on each tool call. The traces show both the approval prompt and the call behind it.
+- Each caller has its own key, so one can be retired without touching another.
+
+**Take it**
+Checks for any agent wired to real tools. Yes or no.
+1. Is there a decision made outside the agent before each consequential call? This build: yes, every call.
+2. Does a no actually stop the agent, with the reason shown to the user? Yes, seen in traces for revoked and for context invalid.
+3. Does step up end in yes only when the step was completed? Yes, tested both ways.
+4. Does an unknown state fail closed? Yes.
+5. Can a record go from active to revoked after a yes? Yes, one test actor does exactly that.
+6. Does each caller hold its own key, and can you retire one alone? Yes, done on 2026-11-17.
+7. Is every run traceable by ID afterward? Yes, 23 runs.
+
+The agent instruction, generic:
+```
+Before any consequential tool call, call the
+authorization tool first.
+Proceed only when the answer is yes.
+If the answer is step_up, ask the user to complete
+the step, then call again with step_up_completed true.
+If the answer is no, or the call fails, stop and say so.
+Never proceed on a missing or unclear answer.
+```
+
+**What I checked before shipping**
+- Each of the seven cases was run through the hosted agent and read in its trace, with the approval prompt and the tool result visible.
+- A denial still returns a valid record, and that record reads active. Only the revoke-after-yes case reads revoked. I had expected otherwise (see What broke).
+- The first agent key was replaced with a dedicated one on 2026-11-17 and the old key was deleted from storage. I ran the delete myself and the key owner confirmed it done. A call with the old key afterward: not run, so UNKNOWN.
+- Screenshots of the traces were saved to the asset bucket. They show test-actor records from the sandbox only, with no real accounts or customer data.
+- Not yet checked: a rubric-based evaluation of the agent's replies, and any agent other than my own test agent.
+
+**Numbers (real ones only)**
+- 7 test actors, 4 tools, 1 hosted test agent, 1 dedicated key, 1 key retired
+- 23 agent runs traced on 2026-11-17, between about 4:55 PM and 5:16 PM local
+- 6 trace screenshots saved
+- Calls to the sandbox from anyone other than me: UNKNOWN as of 2026-11-17
+- Founder-minutes: UNKNOWN in this entry. $0 revenue
+
+**What broke**
+- My first test prompt asked the agent to list the test cases first. The agent's own rule made it ask for a decision before that call, so it stalled. Starting from a named test actor fixed it.
+- I told you a revoked actor's record would read revoked. Wrong. Denial records are active. Only the revoke-after-yes case shows revoked. I corrected it in the same session.
+- Tracing was empty at first because no monitoring resource was attached. Creating one failed on a missing provider registration, fixed by registering three providers from the cloud shell.
+- I pointed to the wrong run as the context-invalid case. It was the first step-up run. The real denial sits in the same conversation, one run later.
+- The agent's shell could not run the deploy tool because it is a Linux VM that is not signed in to the host. I handed over the commands to run locally.
+- The first browser session failed until a tab group existed.
+
+Operating rule for the next integration: run the stop cases before the allow case, and read the trace, not the reply.
+
+**Next**
+Build the rubric evaluator so each reply is scored automatically, then publish the listing for the agent platform. COO review verdict: Revise, on the rubric evaluator and the screenshot set.
+
+Look-back check, 2026-11-24: the next entry reports sandbox calls from callers other than my own agent, from usage counters, with dates.
+
+Live surface: https://sandbox.mobiletrustboundary.com
+
 ## 2026-10-20 — A fixed-IP supplier gateway, and why least privilege needs an owner for every address
 
 **Closed loops**
