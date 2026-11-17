@@ -75,6 +75,8 @@ Look-back check, 2026-11-24: the next entry reports sandbox calls from callers o
 
 Live surface: https://sandbox.mobiletrustboundary.com
 
+**Update 2026-11-17:** Two wording corrections. In What broke, "I told you a revoked actor's record would read revoked" should read "My own plan assumed a revoked actor's record would read revoked." In What I checked before shipping, "I ran the delete myself and the key owner confirmed it done" should read "The delete command was run and reported done; its output was not captured." No facts or numbers changed.
+
 ## 2026-10-20 — A fixed-IP supplier gateway, and why least privilege needs an owner for every address
 
 **Closed loops**
