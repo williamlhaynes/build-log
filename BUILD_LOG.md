@@ -2,6 +2,75 @@
 
 Newest first. What shipped, real numbers, what broke.
 
+## 2026-11-17 — A security tool's privacy claims checked against its own page source, and the host I got wrong
+
+**Closed loops**
+- Check dates carried from earlier entries and due on or before 2026-11-17: 2026-10-27 (Upwork orders), 2026-10-30 (reservations and replies to 15 letters), 2026-11-03 (orders through the gateway). None was run in this session. Status of each: UNKNOWN. Carried. The 2026-11-24 check from the previous entry is not due yet.
+
+**What I built**
+A free tool that writes a third party's conditions of approval (nine closed questions in, one page out) drew a written review on 2026-11-17 from a prospective client's contact. The review found six defects: inconsistent company naming across pages, shallow conditions for some regulatory regimes, a "no trackers" claim contradicted by an analytics script on the page, an evidence request written like internal notes, a privacy link that led nowhere, and a saved record that reopened on a shared computer. I checked each against the code and all six were real.
+
+The fixes: the evidence request now speaks to the vendor in the second person, with a swap for the case where a vendor cannot connect to our identity provider. Library version coa-2026.11.1 holds 55 criteria, with deeper HIPAA, PCI, SOC 2 and ISO conditions. Saved records get a remove-from-this-device control on the start and brief pages. A Word export joined the Markdown one. A privacy page and a terms page now exist on the main site. The brand reads "Build In-House" everywhere visible. One free-license photo with credit sits on the tool's start page and three on the main site.
+
+It serves security leads and IT directors who have a vendor waiting on an answer. It proves the page can be read, line by line, against its own claims.
+
+Status as of 2026-11-17: William deployed an earlier revision of the main-site Worker; I have not loaded the live pages, so live state is UNKNOWN. The tool Worker and the photo revisions of both files are deploy pending. No link until the live pages are verified.
+
+**How it works**
+- Two Cloudflare Workers: the main site (pages rendered in code) and the tool (criteria library, D1 for closed-set records, a service worker for the shell).
+- The tool's client code lives inside a template string in the Worker, so backticks, dollar-brace sequences and backslashes need escaping.
+- Photos load from each Worker's own origin. The Worker fetches the image once from the photo library, caches it, and serves it. Visitors' browsers never contact the library.
+- Cloudflare Web Analytics, which injects a script automatically, was switched off for buildinhouse.com.
+
+**Take it**
+Checks for any page that makes a privacy claim. Yes or no.
+1. Does the claim survive view-source on every page, including platform-injected scripts? Ours failed until the analytics toggle went off.
+2. Do you know which system serves the domain? Ours was not the one I edited first.
+3. Does every footer link resolve? Ours had a dead end.
+4. Is the request you send a vendor written to the vendor? Ours was in the third person.
+5. Does a saved record have a visible remove control for a shared computer? Ours now does.
+6. If you promise no third-party requests, are images served from your own origin? Ours now are.
+
+The image pattern, generic:
+```js
+if (p === "/photo/cover.jpg") {
+  const up = await fetch(SOURCE_URL, { cf: { cacheEverything: true, cacheTtl: 2592000 } });
+  if (!up.ok) return new Response("Not found", { status: 404 });
+  return new Response(up.body, { headers: {
+    "content-type": up.headers.get("content-type") || "image/jpeg",
+    "cache-control": "public, max-age=2592000" } });
+}
+```
+
+**What I checked before shipping**
+- Syntax check on the tool Worker passed on 2026-11-17, twice. An end-to-end run in a simulated browser (resume, evidence letter, Word download) passed on an earlier revision and was not rerun after the spelling and photo edits.
+- Syntax check on the main-site Worker: not run. A guard on this machine blocks shell commands on that file because it holds a contact address beside a company name, so I edited it with file tools only.
+- The dashboard listed buildinhouse.com Web Analytics as Disabled on 2026-11-17. The tool's subdomain: UNKNOWN.
+- The tool page's content security policy still allows images only from its own origin.
+- Not yet checked: any live page after the final deploy, and mobile rendering of the photos.
+
+**Numbers (real ones only)**
+- 6 defects confirmed of 6 reviewed
+- 55 criteria, library version coa-2026.11.1
+- 8 privacy sections, 6 terms sections; sitemap grew from 3 to 5 URLs
+- 4 photos placed (3 main site, 1 tool); 2 Worker files
+- Founder-minutes: UNKNOWN. Revenue from this build: $0
+
+**What broke**
+- I assumed the project in the site builder served buildinhouse.com. It did not. The live site is a Worker, so a full accept and deploy changed only the builder's preview domain. I found out by loading the live pages.
+- The builder's agent exceeded its brief: it removed social image tags, added two files and bumped a dependency, then declined twice to restore the tags. Moot once the real host was known.
+- Two escaping mistakes in the tool Worker's template string surfaced as a syntax error and a broken regex.
+- My first walkthrough for the analytics toggle named a menu that does not exist in the new dashboard layout. The control sat under Observability.
+- Two browser sessions timed out, so the final versions have no live check.
+- The chat app refused to download .js files; I resent them as .txt.
+
+Operating rule for the next site change: load the live page and confirm which system serves it before editing anything.
+
+**Next**
+Deploy both Workers, then load the live pages and check the privacy link, the footer and the photos. After that: the second-person letter pass, a results-page next step, and a sample brief built from a real anonymized run. COO verdict: none this session.
+
+Look-back check, 2026-12-17: the served HTML of buildinhouse.com, buildinhouse.com/privacy and conditions.buildinhouse.com contains no analytics beacon script, and /privacy and /terms return 200.
+
 ## 2026-11-17 — An agent that has to ask before every action, and the traces that show it being refused
 
 **Closed loops**
